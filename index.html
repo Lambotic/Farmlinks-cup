@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Farmlinks Ryder Cup</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1a2744;--navy-l:#243560;--gold:#c9a227;--gold-l:#e8c45a;
+  --green:#2d5a27;--red:#c0392b;--blue:#2980b9;
+  --cream:#faf8f3;--surface:#fff;--surface2:#f4f5f7;
+  --text:#1c2233;--text2:#4a5266;--text3:#8a9287;
+  --border:#dde0e8;--radius:14px;
+  --shadow:0 2px 16px rgba(26,39,68,0.12);
+}
+html,body{height:100%;background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+#app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto}
+.app-header{background:var(--navy);color:#fff;padding:14px 20px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.2)}
+.app-header h1{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;display:flex;align-items:center;gap:8px}
+.header-score{font-size:13px;font-weight:600;background:rgba(255,255,255,0.15);border-radius:20px;padding:4px 12px;border:1px solid rgba(255,255,255,0.3)}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0);box-shadow:0 -2px 12px rgba(0,0,0,0.07)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;color:var(--text3);transition:color .15s;-webkit-tap-highlight-color:transparent}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nav-btn.active{color:var(--navy)}
+.nav-btn.active svg{stroke:var(--navy)}
+.page{display:none}.page.active{display:block}
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,0.06);padding:18px;margin:16px}
+.card-title{font-family:'DM Serif Display',serif;font-size:17px;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title .dot{width:8px;height:8px;background:var(--gold);border-radius:50%;flex-shrink:0}
+.section-heading{font-family:'DM Serif Display',serif;font-size:14px;color:var(--text2);padding:16px 16px 4px}
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:12px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--text2);margin-bottom:6px}
+.form-input,.form-select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:var(--surface2);transition:border-color .15s;-webkit-appearance:none;appearance:none;outline:none}
+.form-input:focus,.form-select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,39,68,0.1);background:#fff}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 20px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.btn-primary{background:var(--navy);color:#fff;width:100%}
+.btn-primary:active{background:var(--navy-l);transform:scale(0.98)}
+.btn-gold{background:var(--gold);color:#fff;width:100%}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1.5px solid var(--border)}
+.btn-sm{padding:8px 14px;font-size:13px}
+.btn-danger{background:var(--red);color:#fff}
+.btn-outline{background:transparent;border:1.5px solid var(--navy);color:var(--navy)}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:all .25s;z-index:999;white-space:nowrap;max-width:320px;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.error{background:var(--red)}
+#toast.success{background:var(--green)}
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(250,248,243,0.85);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.loading-overlay.show{display:flex}
+.spinner{display:inline-block;width:32px;height:32px;border:3px solid rgba(26,39,68,0.2);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:20px 20px 32px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.modal-title{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:18px;color:var(--navy)}
+.empty{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.tab-bar{display:flex;background:var(--surface2);border-radius:10px;padding:3px;margin:16px 16px 0;border:1px solid var(--border)}
+.tab-btn{flex:1;padding:8px;border-radius:8px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;transition:all .15s}
+.tab-btn.active{background:var(--surface);color:var(--navy);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.tab-content{display:none}.tab-content.active{display:block}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-a{background:#dbeafe;color:#1e40af}
+.badge-b{background:#fce7f3;color:#9d174d}
+.badge-gold{background:#fef3c7;color:#92400e}
+.badge-green{background:#d1fae5;color:#065f46}
+.badge-red{background:#fee2e2;color:#991b1b}
+
+/* Hero score */
+.score-hero{background:var(--navy);margin:16px;border-radius:var(--radius);padding:20px;color:#fff;text-align:center;box-shadow:var(--shadow)}
+.score-hero-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}
+.score-team-name{font-size:13px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;opacity:.7}
+.score-team-pts{font-family:'DM Serif Display',serif;font-size:56px;line-height:1;color:var(--gold-l)}
+.score-divider{font-size:20px;opacity:.4;font-weight:300}
+
+/* Match card */
+.match-card{padding:14px 0;border-bottom:1px solid var(--border)}
+.match-card:last-child{border-bottom:none}
+.match-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.match-format{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text3)}
+.match-status{font-size:12px;font-weight:600}
+.match-status.a-winning{color:var(--blue)}
+.match-status.b-winning{color:var(--red)}
+.match-status.halved{color:var(--green)}
+.match-status.not-started{color:var(--text3)}
+.match-players{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;font-size:13px}
+.match-team-a{text-align:left}
+.match-team-b{text-align:right}
+.match-vs{color:var(--text3);font-size:12px}
+.match-hcp{font-size:11px;color:var(--text3)}
+
+/* Player row */
+.player-row{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.player-row:last-child{border-bottom:none}
+.player-name{flex:1;font-weight:600;font-size:14px}
+.player-hcp{font-size:13px;color:var(--text2);width:36px;text-align:center}
+.player-tee{font-size:11px;color:var(--text3)}
+.player-team-sel{display:flex;gap:6px}
+.team-btn{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.team-btn.selected-a{background:#dbeafe;border-color:#3b82f6;color:#1e40af}
+.team-btn.selected-b{background:#fce7f3;border-color:#ec4899;color:#9d174d}
+
+/* Hole scoring */
+.hole-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:12px}
+.hole-btn{aspect-ratio:1;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.hole-btn .hole-num{font-size:10px;color:var(--text3);font-weight:400}
+.hole-btn.result-A{background:#dbeafe;border-color:#3b82f6;color:#1e40af}
+.hole-btn.result-B{background:#fce7f3;border-color:#ec4899;color:#9d174d}
+.hole-btn.result-H{background:#d1fae5;border-color:#10b981;color:#065f46}
+
+/* PIN screen */
+#pin-screen{display:none;position:fixed;inset:0;background:var(--navy);z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
+#pin-screen.show{display:flex}
+.pin-logo{font-size:48px;margin-bottom:8px}
+.pin-title{font-family:'DM Serif Display',serif;color:#fff;font-size:24px;margin-bottom:4px}
+.pin-sub{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:32px}
+.pin-card{background:rgba(255,255,255,0.1);border-radius:var(--radius);padding:24px;width:100%;max-width:320px;border:1px solid rgba(255,255,255,0.2)}
+.pin-dots{display:flex;justify-content:center;gap:16px;margin-bottom:20px}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:transparent;transition:all .15s}
+.pin-dot.filled{background:var(--gold-l);border-color:var(--gold-l)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.pin-pad-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:500;padding:14px;cursor:pointer;transition:background .1s;-webkit-tap-highlight-color:transparent}
+.pin-pad-btn:active{background:rgba(255,255,255,0.25)}
+.pin-error{color:#ff6b6b;font-size:13px;text-align:center;min-height:18px;margin-top:8px}
+
+/* Setup screen */
+#setup-screen{display:none;position:fixed;inset:0;background:var(--navy);z-index:400;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
+#setup-screen.show{display:flex}
+.setup-logo{font-size:48px;margin-bottom:8px}
+.setup-card{background:rgba(255,255,255,0.1);border-radius:var(--radius);padding:24px;width:100%;max-width:360px;border:1px solid rgba(255,255,255,0.2);text-align:left}
+.setup-card .form-label{color:rgba(255,255,255,0.8)}
+.setup-card .form-input{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25);color:#fff}
+.setup-card .form-input::placeholder{color:rgba(255,255,255,0.4)}
+</style>
+</head>
+<body>
+
+<!-- PIN Screen -->
+<div id="pin-screen">
+  <div class="pin-logo">⛳</div>
+  <div class="pin-title">Admin Access</div>
+  <div class="pin-sub">Enter PIN to manage the event</div>
+  <div class="pin-card">
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-pad-btn" onclick="pp('1')">1</button>
+      <button class="pin-pad-btn" onclick="pp('2')">2</button>
+      <button class="pin-pad-btn" onclick="pp('3')">3</button>
+      <button class="pin-pad-btn" onclick="pp('4')">4</button>
+      <button class="pin-pad-btn" onclick="pp('5')">5</button>
+      <button class="pin-pad-btn" onclick="pp('6')">6</button>
+      <button class="pin-pad-btn" onclick="pp('7')">7</button>
+      <button class="pin-pad-btn" onclick="pp('8')">8</button>
+      <button class="pin-pad-btn" onclick="pp('9')">9</button>
+      <button class="pin-pad-btn" onclick="ppClear()" style="font-size:13px;opacity:.7">Clear</button>
+      <button class="pin-pad-btn" onclick="pp('0')">0</button>
+      <button class="pin-pad-btn btn-gold" onclick="checkPin()" style="font-size:18px">→</button>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+  </div>
+  <button class="btn btn-secondary" style="margin-top:20px;color:#fff;border-color:rgba(255,255,255,0.3);background:transparent" onclick="closePinScreen()">Back to Leaderboard</button>
+</div>
+
+<!-- Setup Screen (API URL not configured) -->
+<div id="setup-screen">
+  <div class="setup-logo">⛳</div>
+  <h1 style="font-family:'DM Serif Display',serif;color:#fff;font-size:24px;margin-bottom:8px">Farmlinks Ryder Cup</h1>
+  <p style="color:rgba(255,255,255,0.6);margin-bottom:24px;font-size:14px">Configuration required</p>
+  <div class="setup-card">
+    <p style="color:rgba(255,255,255,0.8);font-size:13px;line-height:1.6">Paste your Apps Script Web App URL into the <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px">API_URL</code> variable in this HTML file, then re-upload to GitHub.</p>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loader">
+  <div class="spinner"></div>
+  <span style="color:var(--navy);font-size:14px">Loading…</span>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- APP -->
+<div id="app">
+  <header class="app-header">
+    <h1>⛳ Farmlinks Cup</h1>
+    <div class="header-score" id="header-score">A 0 — 0 B</div>
+  </header>
+
+  <div class="scroll-area">
+
+    <!-- LEADERBOARD PAGE -->
+    <div class="page active" id="page-live">
+      <div class="score-hero">
+        <div style="font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;opacity:.6;margin-bottom:12px">Overall Score</div>
+        <div class="score-hero-teams">
+          <div><div class="score-team-name">Team A</div><div class="score-team-pts" id="total-a">0</div></div>
+          <div class="score-divider">—</div>
+          <div><div class="score-team-name">Team B</div><div class="score-team-pts" id="total-b">0</div></div>
+        </div>
+        <div style="font-size:12px;opacity:.5;margin-top:12px" id="points-possible"></div>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-day1" onclick="showLbTab('day1')">Day 1</button>
+        <button class="tab-btn" id="tab-day2" onclick="showLbTab('day2')">Day 2 Singles</button>
+      </div>
+
+      <div class="tab-content active" id="lb-day1">
+        <p class="section-heading">Best Ball</p>
+        <div class="card" style="padding:0 18px"><div id="lb-bestball"></div></div>
+        <p class="section-heading">Scramble</p>
+        <div class="card" style="padding:0 18px"><div id="lb-scramble"></div></div>
+      </div>
+      <div class="tab-content" id="lb-day2">
+        <p class="section-heading">Singles</p>
+        <div class="card" style="padding:0 18px"><div id="lb-singles"></div></div>
+      </div>
+    </div>
+
+    <!-- SCORING PAGE -->
+    <div class="page" id="page-score">
+      <p class="section-heading">Select Match to Score</p>
+      <div class="card" style="padding:0 18px"><div id="score-match-list"></div></div>
+    </div>
+
+    <!-- ADMIN PAGE -->
+    <div class="page" id="page-admin">
+      <div class="tab-bar">
+        <button class="tab-btn active" id="atab-players" onclick="showAdminTab('players')">Players</button>
+        <button class="tab-btn" id="atab-teams" onclick="showAdminTab('teams')">Teams</button>
+        <button class="tab-btn" id="atab-pairings" onclick="showAdminTab('pairings')">Pairings</button>
+      </div>
+
+      <!-- Players tab -->
+      <div class="tab-content active" id="admin-players">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 0">
+          <p class="section-heading" style="padding:0">Players (16)</p>
+          <button class="btn btn-sm btn-outline" onclick="showAddPlayer()">+ Add</button>
+        </div>
+        <div class="card" style="padding:0 18px"><div id="players-list"></div></div>
+        <div style="padding:0 16px 8px">
+          <button class="btn btn-primary" onclick="savePlayers()">Save Players</button>
+        </div>
+      </div>
+
+      <!-- Teams tab -->
+      <div class="tab-content" id="admin-teams">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Team Assignment</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Assign each player to Team A or Team B. Use Suggest for balanced teams.</p>
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button class="btn btn-sm btn-outline" style="flex:1" onclick="suggestTeams()">⚡ Suggest Teams</button>
+            <button class="btn btn-sm btn-primary" style="flex:1" onclick="saveTeams()">Save Teams</button>
+          </div>
+          <div id="teams-list"></div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+            <div id="team-summary" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px"></div>
+            <button class="btn btn-gold" onclick="lockTeams()" id="lock-teams-btn">🔒 Lock Teams</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pairings tab -->
+      <div class="tab-content" id="admin-pairings">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Day 1 — Best Ball</div>
+          <button class="btn btn-sm btn-outline" style="margin-bottom:12px" onclick="suggestPairings('bestball')">⚡ Suggest Pairings</button>
+          <div id="pairings-bestball"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Day 1 — Scramble</div>
+          <button class="btn btn-sm btn-outline" style="margin-bottom:12px" onclick="suggestPairings('scramble')">⚡ Suggest Pairings</button>
+          <div id="pairings-scramble"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Day 2 — Singles</div>
+          <button class="btn btn-sm btn-outline" style="margin-bottom:12px" onclick="suggestPairings('singles')">⚡ Suggest Pairings</button>
+          <div id="pairings-singles"></div>
+        </div>
+        <div style="padding:0 16px 8px">
+          <button class="btn btn-gold" onclick="savePairings()">💾 Save All Pairings</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-live" onclick="showPage('live')">
+      <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Live
+    </button>
+    <button class="nav-btn" id="nav-score" onclick="showPage('score')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      Score
+    </button>
+    <button class="nav-btn" id="nav-admin" onclick="showAdminPage()">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Admin
+    </button>
+  </nav>
+</div>
+
+<!-- Add Player Modal -->
+<div class="modal-overlay" id="modal-player">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-player-title">Add Player</div>
+    <input type="hidden" id="edit-player-idx">
+    <div class="form-group">
+      <label class="form-label">Player Name</label>
+      <input class="form-input" id="player-name" type="text" placeholder="e.g. John Smith">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Handicap Index</label>
+      <input class="form-input" id="player-hcp" type="number" step="0.1" placeholder="e.g. 12.5">
+    </div>
+    <div id="player-tee-preview" style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;display:none">
+      <strong id="ptee-name"></strong> tee · Course Handicap: <strong id="ptee-chcp"></strong>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-player')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="submitPlayer()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Score Hole Modal -->
+<div class="modal-overlay" id="modal-score">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-score-title">Score Match</div>
+    <div id="modal-score-info" style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px"></div>
+    <div class="form-group">
+      <label class="form-label">Your Name (scorer)</label>
+      <input class="form-input" id="scorer-name" type="text" placeholder="Enter your name">
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Tap a hole to record the result. A = Team A wins hole, B = Team B wins, H = Halved.</p>
+    <div class="hole-grid" id="hole-grid"></div>
+    <div id="match-result-display" style="text-align:center;margin-top:16px;padding:12px;background:var(--surface2);border-radius:10px;font-size:14px;font-weight:600"></div>
+    <div style="margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-score')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hole Result Modal -->
+<div class="modal-overlay" id="modal-hole">
+  <div class="modal" style="padding-bottom:40px">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-hole-title">Hole Result</div>
+    <div id="modal-hole-info" style="font-size:13px;color:var(--text2);margin-bottom:20px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <button class="btn" style="background:#dbeafe;color:#1e40af;border:2px solid #3b82f6;flex-direction:column;padding:16px 8px;font-size:13px" onclick="submitHoleResult('A')">
+        <span style="font-size:24px">🏆</span>Team A Wins
+      </button>
+      <button class="btn" style="background:#d1fae5;color:#065f46;border:2px solid #10b981;flex-direction:column;padding:16px 8px;font-size:13px" onclick="submitHoleResult('H')">
+        <span style="font-size:24px">🤝</span>Halved
+      </button>
+      <button class="btn" style="background:#fce7f3;color:#9d174d;border:2px solid #ec4899;flex-direction:column;padding:16px 8px;font-size:13px" onclick="submitHoleResult('B')">
+        <span style="font-size:24px">🏆</span>Team B Wins
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const API_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+// ============================================================
+
+const COURSES = {
+  copperhead: { name:'Copperhead', par:72, rating:73.1, slope:136,
+    si:[15,9,13,1,7,17,11,5,3,14,6,2,18,4,10,12,16,8] },
+  whitetail:  { name:'Whitetail',  par:72, rating:70.3, slope:131,
+    si:[15,9,13,1,7,17,11,5,3,14,6,2,18,4,10,12,16,8] }
+};
+
+let STATE = {
+  adminUnlocked: false,
+  pinBuffer: '',
+  players: [],
+  pairings: [],
+  scores: [],
+  leaderboard: null,
+  currentMatch: null,
+  currentHole: null,
+  locked: { teamA: false, teamB: false, pairings: false }
+};
+
+// ---- INIT ----
+window.addEventListener('DOMContentLoaded', () => {
+  if (API_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    document.getElementById('setup-screen').classList.add('show');
+    return;
+  }
+  loadLeaderboard();
+  setInterval(loadLeaderboard, 30000); // auto-refresh every 30s
+});
+
+// ---- API ----
+function apiGet(action, params = {}) {
+  const qs = new URLSearchParams({ action, ...params }).toString();
+  return fetch(`${API_URL}?${qs}`)
+    .then(r => r.json())
+    .then(d => { if (!d.ok) throw new Error(d.error || 'API error'); return d; });
+}
+function apiPost(action, body = {}) {
+  const qs = new URLSearchParams({ action, payload: JSON.stringify(body) }).toString();
+  return fetch(`${API_URL}?${qs}`)
+    .then(r => r.json())
+    .then(d => { if (!d.ok) throw new Error(d.error || 'API error'); return d; });
+}
+
+// ---- PIN ----
+function showAdminPage() {
+  if (STATE.adminUnlocked) { showPage('admin'); loadAdminData(); return; }
+  STATE.pinBuffer = '';
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-screen').classList.add('show');
+}
+function closePinScreen() {
+  document.getElementById('pin-screen').classList.remove('show');
+}
+function pp(d) {
+  if (STATE.pinBuffer.length < 4) {
+    STATE.pinBuffer += d;
+    updatePinDots();
+    if (STATE.pinBuffer.length === 4) setTimeout(checkPin, 150);
+  }
+}
+function ppClear() { STATE.pinBuffer = ''; updatePinDots(); document.getElementById('pin-error').textContent = ''; }
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('pd'+i).classList.toggle('filled', i < STATE.pinBuffer.length);
+  }
+}
+async function checkPin() {
+  showLoader();
+  try {
+    const res = await apiGet('verifyPin', { pin: STATE.pinBuffer });
+    if (res.valid) {
+      STATE.adminUnlocked = true;
+      document.getElementById('pin-screen').classList.remove('show');
+      showPage('admin');
+      loadAdminData();
+    } else {
+      document.getElementById('pin-error').textContent = 'Incorrect PIN';
+      STATE.pinBuffer = '';
+      updatePinDots();
+    }
+  } catch(e) { toast('Error: ' + e.message, true); }
+  hideLoader();
+}
+
+// ---- NAVIGATION ----
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if (name === 'live') loadLeaderboard();
+  if (name === 'score') loadScorePage();
+}
+function showLbTab(tab) {
+  document.querySelectorAll('#page-live .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-live .tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('lb-'+tab).classList.add('active');
+}
+function showAdminTab(tab) {
+  document.querySelectorAll('#page-admin .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-admin .tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('atab-'+tab).classList.add('active');
+  document.getElementById('admin-'+tab).classList.add('active');
+}
+
+// ---- LEADERBOARD ----
+async function loadLeaderboard() {
+  try {
+    const res = await apiGet('getLeaderboard');
+    STATE.leaderboard = res;
+    renderLeaderboard(res);
+  } catch(e) { /* silent fail on auto-refresh */ }
+}
+
+function renderLeaderboard(data) {
+  const { matches, totalA, totalB } = data;
+  document.getElementById('total-a').textContent = formatPts(totalA);
+  document.getElementById('total-b').textContent = formatPts(totalB);
+  document.getElementById('header-score').textContent = `A ${formatPts(totalA)} — ${formatPts(totalB)} B`;
+
+  const maxPts = 20;
+  const played = matches.filter(m => m.holesPlayed > 0).length;
+  document.getElementById('points-possible').textContent =
+    played > 0 ? `${matches.length} matches · ${maxPts} points available` : 'No matches started yet';
+
+  ['bestball','scramble','singles'].forEach(fmt => {
+    const el = document.getElementById('lb-'+fmt);
+    if (!el) return;
+    const fmtMatches = matches.filter(m => m.format === fmt);
+    if (!fmtMatches.length) { el.innerHTML = '<div class="empty"><div class="empty-text">No matches yet</div></div>'; return; }
+    el.innerHTML = fmtMatches.map(m => renderMatchCard(m)).join('');
+  });
+}
+
+function renderMatchCard(m) {
+  const statusClass = m.aUp > 0 ? 'a-winning' : m.aUp < 0 ? 'b-winning' : m.holesPlayed > 0 ? 'halved' : 'not-started';
+  const pts = m.pointsA > 0 || m.pointsB > 0
+    ? `<span class="badge ${m.pointsA===1?'badge-a':m.pointsB===1?'badge-b':'badge-gold'}">${m.pointsA===1?'A wins':m.pointsB===1?'B wins':'½ each'}</span>`
+    : '';
+  return `<div class="match-card">
+    <div class="match-header">
+      <span class="match-format">Match ${m.matchNum}</span>
+      ${pts}
+    </div>
+    <div class="match-players">
+      <div class="match-team-a">
+        <div style="font-weight:600;font-size:13px">${m.teamA}</div>
+        ${m.handicapA !== '' ? `<div class="match-hcp">Hcp ${m.handicapA}</div>` : ''}
+      </div>
+      <div class="match-vs">vs</div>
+      <div class="match-team-b">
+        <div style="font-weight:600;font-size:13px;text-align:right">${m.teamB}</div>
+        ${m.handicapB !== '' ? `<div class="match-hcp" style="text-align:right">Hcp ${m.handicapB}</div>` : ''}
+      </div>
+    </div>
+    <div class="match-status ${statusClass}" style="margin-top:6px;font-size:13px">${m.status}</div>
+  </div>`;
+}
+
+// ---- SCORING PAGE ----
+async function loadScorePage() {
+  try {
+    const [pRes, sRes] = await Promise.all([apiGet('getPairings'), apiGet('getScores')]);
+    STATE.pairings = pRes.pairings;
+    STATE.scores   = sRes.scores;
+    renderScorePage();
+  } catch(e) { toast('Error loading matches', true); }
+}
+
+function renderScorePage() {
+  const list = document.getElementById('score-match-list');
+  if (!STATE.pairings.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div><div class="empty-text">Pairings not set yet</div></div>';
+    return;
+  }
+  list.innerHTML = STATE.pairings.map(p => {
+    const matchScores = STATE.scores.filter(s => s.pairingId === p.pairingId);
+    const holesPlayed = matchScores.length;
+    return `<div class="match-card" style="cursor:pointer" onclick="openScoreModal('${p.pairingId}')">
+      <div class="match-header">
+        <span class="match-format">${fmtLabel(p.format)} · Match ${p.matchNum} · Day ${p.day}</span>
+        <span class="badge ${holesPlayed===0?'badge-gold':holesPlayed===18?'badge-green':'badge-a'}">${holesPlayed===0?'Not started':holesPlayed===18?'Complete':holesPlayed+' holes'}</span>
+      </div>
+      <div class="match-players">
+        <div class="match-team-a" style="font-weight:600;font-size:13px">${p.teamA_p2 ? p.teamA_p1+' & '+p.teamA_p2 : p.teamA_p1}</div>
+        <div class="match-vs">vs</div>
+        <div class="match-team-b" style="font-weight:600;font-size:13px;text-align:right">${p.teamB_p2 ? p.teamB_p1+' & '+p.teamB_p2 : p.teamB_p1}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openScoreModal(pairingId) {
+  const p = STATE.pairings.find(x => x.pairingId === pairingId);
+  if (!p) return;
+  STATE.currentMatch = p;
+
+  document.getElementById('modal-score-title').textContent = `${fmtLabel(p.format)} · Match ${p.matchNum}`;
+  document.getElementById('modal-score-info').innerHTML = `
+    <div style="display:flex;justify-content:space-between">
+      <span><strong>Team A:</strong> ${p.teamA_p2 ? p.teamA_p1+' & '+p.teamA_p2 : p.teamA_p1}</span>
+      <span><strong>Team B:</strong> ${p.teamB_p2 ? p.teamB_p1+' & '+p.teamB_p2 : p.teamB_p1}</span>
+    </div>
+    ${p.teamHandicapA !== '' ? `<div style="margin-top:4px;color:var(--text3)">Hcp: A=${p.teamHandicapA} B=${p.teamHandicapB}</div>` : ''}`;
+
+  renderHoleGrid(pairingId);
+  openModal('modal-score');
+}
+
+function renderHoleGrid(pairingId) {
+  const matchScores = STATE.scores.filter(s => s.pairingId === pairingId);
+  const holeMap = {};
+  matchScores.forEach(s => { holeMap[parseInt(s.hole)] = s.result; });
+
+  let aUp = 0;
+  for (let h = 1; h <= 18; h++) {
+    const r = holeMap[h];
+    if (r === 'A') aUp++;
+    else if (r === 'B') aUp--;
+  }
+  const holesPlayed = Object.keys(holeMap).length;
+  const holesLeft = 18 - holesPlayed;
+
+  // Match over?
+  let resultText = '';
+  if (Math.abs(aUp) > holesLeft) {
+    const winner = aUp > 0 ? 'Team A' : 'Team B';
+    resultText = `${winner} wins ${Math.abs(aUp)}&${holesLeft}`;
+  } else if (holesPlayed === 18) {
+    resultText = aUp === 0 ? 'Match Halved' : `${aUp>0?'Team A':'Team B'} wins`;
+  } else if (holesPlayed > 0) {
+    resultText = aUp === 0 ? 'All Square' : `${aUp>0?'Team A':'Team B'} ${Math.abs(aUp)} UP`;
+  }
+  document.getElementById('match-result-display').textContent = resultText;
+
+  const grid = document.getElementById('hole-grid');
+  grid.innerHTML = Array.from({length:18}, (_,i) => {
+    const h = i+1;
+    const r = holeMap[h] || '';
+    return `<button class="hole-btn ${r?'result-'+r:''}" onclick="openHoleModal(${h})">
+      <span class="hole-num">${h}</span>
+      <span>${r||'—'}</span>
+    </button>`;
+  }).join('');
+}
+
+function openHoleModal(hole) {
+  STATE.currentHole = hole;
+  const p = STATE.currentMatch;
+  document.getElementById('modal-hole-title').textContent = `Hole ${hole}`;
+  document.getElementById('modal-hole-info').innerHTML =
+    `<strong>Team A:</strong> ${p.teamA_p2 ? p.teamA_p1+' & '+p.teamA_p2 : p.teamA_p1}<br>
+     <strong>Team B:</strong> ${p.teamB_p2 ? p.teamB_p1+' & '+p.teamB_p2 : p.teamB_p1}`;
+
+  // Check if already scored
+  const existing = STATE.scores.find(s => s.pairingId === p.pairingId && parseInt(s.hole) === hole);
+  if (existing) {
+    document.getElementById('modal-hole-info').innerHTML +=
+      `<br><span style="color:var(--text3);font-size:12px;margin-top:4px;display:block">Currently recorded: <strong>${existing.result === 'A' ? 'Team A' : existing.result === 'B' ? 'Team B' : 'Halved'}</strong> — tap to change</span>`;
+  }
+  openModal('modal-hole');
+}
+
+async function submitHoleResult(result) {
+  const scorer = document.getElementById('scorer-name').value.trim();
+  if (!scorer) { toast('Please enter your name first', true); closeModal('modal-hole'); return; }
+
+  const p = STATE.currentMatch;
+  const hole = STATE.currentHole;
+
+  // Check for duplicate
+  const existing = STATE.scores.find(s => s.pairingId === p.pairingId && parseInt(s.hole) === hole);
+  if (existing && existing.result === result) {
+    toast('Same result already recorded', false);
+    closeModal('modal-hole');
+    return;
+  }
+
+  showLoader();
+  try {
+    const res = await apiPost('saveScore', {
+      pairingId: p.pairingId,
+      format: p.format,
+      hole: hole,
+      result: result,
+      enteredBy: scorer,
+    });
+
+    if (!res.ok && res.error === 'DUPLICATE') {
+      // Update existing — inform user
+      toast(`Hole ${hole} already scored as ${existing.result}. Updating…`);
+    }
+
+    // Update local scores
+    const idx = STATE.scores.findIndex(s => s.pairingId === p.pairingId && parseInt(s.hole) === hole);
+    if (idx >= 0) STATE.scores[idx].result = result;
+    else STATE.scores.push({ pairingId: p.pairingId, hole: String(hole), result, enteredBy: scorer });
+
+    closeModal('modal-hole');
+    renderHoleGrid(p.pairingId);
+    toast(`Hole ${hole}: ${result === 'A' ? 'Team A wins' : result === 'B' ? 'Team B wins' : 'Halved'} ✓`, false, 'success');
+    loadLeaderboard();
+  } catch(e) {
+    toast('Error: ' + e.message, true);
+  }
+  hideLoader();
+}
+
+// ---- ADMIN ----
+async function loadAdminData() {
+  showLoader();
+  try {
+    const [pRes, teamRes, pairRes] = await Promise.all([
+      apiGet('getPlayers'),
+      apiGet('getTeams'),
+      apiGet('getPairings'),
+    ]);
+    STATE.players  = pRes.players || [];
+    STATE.locked   = teamRes.locked || {};
+    STATE.pairings = pairRes.pairings || [];
+    renderPlayersList();
+    renderTeamsList();
+    renderAllPairings();
+  } catch(e) { toast('Error loading admin data', true); }
+  hideLoader();
+}
+
+// Players
+function renderPlayersList() {
+  const list = document.getElementById('players-list');
+  if (!STATE.players.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">No players yet. Add up to 16.</div></div>';
+    return;
+  }
+  list.innerHTML = STATE.players.map((p,i) => `
+    <div class="player-row">
+      <div style="flex:1">
+        <div class="player-name">${p.name}</div>
+        <div class="player-tee">${p.tee ? COURSES[p.tee].name+' tee' : ''} · Course Hcp: ${p.courseHandicap||'—'}</div>
+      </div>
+      <div class="player-hcp">${p.handicapIndex}</div>
+      <button class="btn btn-sm btn-secondary" style="margin-left:8px" onclick="editPlayer(${i})">✏️</button>
+      <button class="btn btn-sm btn-danger" style="margin-left:6px" onclick="deletePlayer(${i})">✕</button>
+    </div>`).join('');
+}
+
+function showAddPlayer() {
+  document.getElementById('modal-player-title').textContent = 'Add Player';
+  document.getElementById('edit-player-idx').value = '';
+  document.getElementById('player-name').value = '';
+  document.getElementById('player-hcp').value = '';
+  document.getElementById('player-tee-preview').style.display = 'none';
+  openModal('modal-player');
+}
+function editPlayer(idx) {
+  const p = STATE.players[idx];
+  document.getElementById('modal-player-title').textContent = 'Edit Player';
+  document.getElementById('edit-player-idx').value = idx;
+  document.getElementById('player-name').value = p.name;
+  document.getElementById('player-hcp').value = p.handicapIndex;
+  updateTeePreview();
+  openModal('modal-player');
+}
+
+document.getElementById('player-hcp').addEventListener('input', updateTeePreview);
+function updateTeePreview() {
+  const hcp = parseFloat(document.getElementById('player-hcp').value);
+  if (isNaN(hcp)) { document.getElementById('player-tee-preview').style.display='none'; return; }
+  const tee = hcp <= 9 ? 'copperhead' : 'whitetail';
+  const course = COURSES[tee];
+  const chcp = Math.round(hcp * (course.slope/113) + (course.rating - course.par));
+  document.getElementById('ptee-name').textContent = course.name;
+  document.getElementById('ptee-chcp').textContent = chcp;
+  document.getElementById('player-tee-preview').style.display = 'block';
+}
+
+function submitPlayer() {
+  const name = document.getElementById('player-name').value.trim();
+  const hcp  = parseFloat(document.getElementById('player-hcp').value);
+  const idx  = document.getElementById('edit-player-idx').value;
+  if (!name) { toast('Enter player name', true); return; }
+  if (isNaN(hcp)) { toast('Enter handicap index', true); return; }
+
+  const tee = hcp <= 9 ? 'copperhead' : 'whitetail';
+  const course = COURSES[tee];
+  const chcp = Math.round(hcp * (course.slope/113) + (course.rating - course.par));
+  const player = { name, handicapIndex: hcp, tee, courseHandicap: chcp, team: '' };
+
+  if (idx === '') {
+    if (STATE.players.length >= 16) { toast('Maximum 16 players', true); return; }
+    STATE.players.push(player);
+  } else {
+    player.team = STATE.players[parseInt(idx)].team || '';
+    STATE.players[parseInt(idx)] = player;
+  }
+  closeModal('modal-player');
+  renderPlayersList();
+  renderTeamsList();
+}
+function deletePlayer(idx) {
+  if (!confirm('Remove this player?')) return;
+  STATE.players.splice(idx, 1);
+  renderPlayersList();
+  renderTeamsList();
+}
+
+async function savePlayers() {
+  if (STATE.players.length === 0) { toast('No players to save', true); return; }
+  showLoader();
+  try {
+    await apiPost('savePlayers', { players: STATE.players });
+    toast('Players saved!', false, 'success');
+  } catch(e) { toast('Error: ' + e.message, true); }
+  hideLoader();
+}
+
+// Teams
+function renderTeamsList() {
+  const list = document.getElementById('teams-list');
+  const sorted = [...STATE.players].sort((a,b) => a.handicapIndex - b.handicapIndex);
+  list.innerHTML = sorted.map((p,i) => {
+    const origIdx = STATE.players.indexOf(p);
+    return `<div class="player-row">
+      <div style="flex:1">
+        <div class="player-name">${p.name}</div>
+        <div class="player-tee">Hcp ${p.handicapIndex} · ${p.tee ? COURSES[p.tee].name : ''}</div>
+      </div>
+      <div class="player-team-sel">
+        <button class="team-btn ${p.team==='A'?'selected-a':''}" onclick="assignTeam(${origIdx},'A')">A</button>
+        <button class="team-btn ${p.team==='B'?'selected-b':''}" onclick="assignTeam(${origIdx},'B')">B</button>
+      </div>
+    </div>`;
+  }).join('');
+  renderTeamSummary();
+}
+function assignTeam(idx, team) {
+  STATE.players[idx].team = team;
+  renderTeamsList();
+}
+function renderTeamSummary() {
+  const teamA = STATE.players.filter(p => p.team === 'A');
+  const teamB = STATE.players.filter(p => p.team === 'B');
+  const avgA = teamA.length ? (teamA.reduce((s,p) => s+parseFloat(p.handicapIndex),0)/teamA.length).toFixed(1) : '—';
+  const avgB = teamB.length ? (teamB.reduce((s,p) => s+parseFloat(p.handicapIndex),0)/teamB.length).toFixed(1) : '—';
+  document.getElementById('team-summary').innerHTML = `
+    <div style="background:#dbeafe;border-radius:10px;padding:12px;text-align:center">
+      <div style="font-weight:700;color:#1e40af;font-size:16px">Team A</div>
+      <div style="font-size:13px;color:#1e40af">${teamA.length} players</div>
+      <div style="font-size:12px;color:#3b82f6">Avg hcp: ${avgA}</div>
+    </div>
+    <div style="background:#fce7f3;border-radius:10px;padding:12px;text-align:center">
+      <div style="font-weight:700;color:#9d174d;font-size:16px">Team B</div>
+      <div style="font-size:13px;color:#9d174d">${teamB.length} players</div>
+      <div style="font-size:12px;color:#ec4899">Avg hcp: ${avgB}</div>
+    </div>`;
+}
+async function suggestTeams() {
+  showLoader();
+  try {
+    await savePlayers();
+    const res = await apiGet('suggestTeams');
+    // Map suggested teams back
+    res.players.forEach(sp => {
+      const idx = STATE.players.findIndex(p => p.name === sp.name);
+      if (idx >= 0) STATE.players[idx].team = sp.team;
+    });
+    renderTeamsList();
+    toast('Teams suggested! Review and adjust as needed.');
+  } catch(e) { toast('Error: ' + e.message, true); }
+  hideLoader();
+}
+async function saveTeams() {
+  const teamA = STATE.players.filter(p => p.team === 'A');
+  const teamB = STATE.players.filter(p => p.team === 'B');
+  if (teamA.length !== 8 || teamB.length !== 8) { toast('Each team must have exactly 8 players', true); return; }
+  showLoader();
+  try {
+    await apiPost('saveTeams', {
+      players: STATE.players.map(p => ({ playerId: p.playerId||'', team: p.team }))
+    });
+    await savePlayers();
+    toast('Teams saved!', false, 'success');
+  } catch(e) { toast('Error: ' + e.message, true); }
+  hideLoader();
+}
+async function lockTeams() {
+  if (!confirm('Lock teams? This cannot be undone.')) return;
+  showLoader();
+  try {
+    await apiPost('saveTeams', {
+      players: STATE.players.map(p => ({ playerId: p.playerId||'', team: p.team })),
+      lockTeams: true
+    });
+    await savePlayers();
+    STATE.locked.teamA = STATE.locked.teamB = true;
+    toast('Teams locked! ✓', false, 'success');
+    document.getElementById('lock-teams-btn').textContent = '✓ Teams Locked';
+    document.getElementById('lock-teams-btn').disabled = true;
+  } catch(e) { toast('Error: ' + e.message, true); }
+  hideLoader();
+}
+
+// Pairings
+function renderAllPairings() {
+  ['bestball','scramble','singles'].forEach(fmt => {
+    const el = document.getElementById('pairings-'+fmt);
+    const fmtPairings = STATE.pairings.filter(p => p.format === fmt);
+    if (!fmtPairings.length) {
+      el.innerHTML = '<p style="color:var(--text3);font-size:13px">No pairings yet — use Suggest or save manually.</p>';
+      return;
+    }
+    el.innerHTML = fmtPairings.map(p => `
+      <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:6px">Match ${p.matchNum} · Day ${p.day}</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;font-size:13px">
+          <div><span class="badge badge-a">A</span> ${p.teamA_p2 ? p.teamA_p1+' & '+p.teamA_p2 : p.teamA_p1}</div>
+          <div style="color:var(--text3)">vs</div>
+          <div style="text-align:right">${p.teamB_p2 ? p.teamB_p1+' & '+p.teamB_p2 : p.teamB_p1} <span class="badge badge-b">B</span></div>
+        </div>
+        ${p.teamHandicapA !== '' ? `<div style="font-size:12px;color:var(--text3);margin-top:4px">Team Hcp: A=${p.teamHandicapA} B=${p.teamHandicapB}</div>` : ''}
+      </div>`).join('');
+  });
+}
+
+async function suggestPairings(format) {
+  showLoader();
+  try {
+    await savePlayers();
+    await saveTeams();
+    const res = await apiGet('suggestPairings', { format });
+    // Merge into STATE.pairings
+    res.pairings.forEach(np => {
+      const idx = STATE.pairings.findIndex(p => p.pairingId === np.pairingId);
+      if (idx >= 0) STATE.pairings[idx] = np;
+      else STATE.pairings.push(np);
+    });
+    renderAllPairings();
+    toast(`${fmtLabel(format)} pairings suggested!`);
+  } catch(e) { toast('Error: ' + e.message, true); }
+  hideLoader();
+}
+
+async function savePairings() {
+  if (!STATE.pairings.length) { toast('No pairings to save', true); return; }
+  showLoader();
+  try {
+    await apiPost('savePairings', { pairings: STATE.pairings });
+    toast('Pairings saved! ✓', false, 'success');
+  } catch(e) { toast('Error: ' + e.message, true); }
+  hideLoader();
+}
+
+// ---- HELPERS ----
+function fmtLabel(fmt) {
+  return fmt === 'bestball' ? 'Best Ball' : fmt === 'scramble' ? 'Scramble' : 'Singles';
+}
+function formatPts(pts) {
+  return pts % 1 === 0 ? pts.toString() : pts.toFixed(1);
+}
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+});
+function showLoader() { document.getElementById('loader').classList.add('show'); }
+function hideLoader() { document.getElementById('loader').classList.remove('show'); }
+let toastTimer;
+function toast(msg, isError=false, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (isError?' error':type==='success'?' success':'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
